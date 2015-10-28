@@ -1,12 +1,7 @@
 package de.hawlandshut.sgheldd.scheduleplaner;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by s-gheldd on 10/27/15.
@@ -71,12 +66,13 @@ public class MapSchedule implements Schedule {
      * @param eventTime event time in form of @see LocalDateTime
      */
     private void addEvent(Event event, LocalDateTime eventTime) {
-        if (!eventMap.containsKey(event)) {
+        if (eventMap.containsKey(event)) {
+            eventMap.get(event).add(eventTime);
+
+        } else {
             final Set<LocalDateTime> dateList = new HashSet<>();
             dateList.add(eventTime);
             eventMap.put(event, dateList);
-        } else {
-            eventMap.get(event).add(eventTime);
         }
     }
 
@@ -135,11 +131,11 @@ public class MapSchedule implements Schedule {
 
     @Override
     public Schedule repeatWeekly(Event event, int times) {
-        LocalDateTime lasttime = this.getLastTime(event);
+        LocalDateTime lastTime = this.getLastTime(event);
 
         for (int iterationInt = 1; iterationInt <= times; iterationInt++) {
-            lasttime = lasttime.plusWeeks(1);
-            addEvent(event, lasttime);
+            lastTime = lastTime.plusWeeks(1);
+            addEvent(event, lastTime);
         }
         return this;
     }
