@@ -1,20 +1,59 @@
 package de.hawlandshut.sgheldd.scheduleplaner;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * Created by s-gheldd on 10/27/15.
  */
 public class MapSchedule implements Schedule {
 
-    private final HashMap<Event, Set<LocalDateTime>> eventMap = new HashMap<>();
+    /**
+     * private field, none of your business.
+     */
+    private static final int SPLITNUMBER = 7;
 
-    MapSchedule(String... eventStrings) throws Exception {
-        for (String eventString : eventStrings) {
+    /**
+     * Dito.
+     */
+    private static final int NAMEINT = 5;
+
+    /**
+     * Dito.
+     */
+    private static final int DURATIONINT = 6;
+
+    /**
+     * Dito.
+     */
+    private static final int HOURINT = 3;
+
+    /**
+     * Dito.
+     */
+    private static final int MINUTEINT = 4;
+
+    /**
+     * Dito.
+     */
+    private final Map<Event, Set<LocalDateTime>> eventMap = new HashMap<>();
+
+
+    /**
+     * Constructor.
+     * @param eventStrings  Expects string of form yyyy/mm/dd/hh/minmin/name/min.
+     * @throws IllegalArgumentException Throws illegal argument exception if string is in the wrong format.
+     */
+    MapSchedule(final String... eventStrings) throws IllegalArgumentException {
+        for (final String eventString : eventStrings) {
 
             final String[] splitString = eventString.split("/");
-            if (splitString.length != 7)
+            if (splitString.length != SPLITNUMBER)
                 throw new IllegalArgumentException("wrong format fot input string, needs to be: #/#/#/#/#/#/#\ngot: "
                         + eventString);
 
@@ -26,6 +65,11 @@ public class MapSchedule implements Schedule {
         }
     }
 
+    /**
+     * Adds an event to the schedule. Avoids duplicates.
+     * @param event an @see Event
+     * @param eventTime event time in form of @see LocalDateTime
+     */
     private void addEvent(Event event, LocalDateTime eventTime) {
         if (!eventMap.containsKey(event)) {
             final Set<LocalDateTime> dateList = new HashSet<>();
@@ -36,42 +80,53 @@ public class MapSchedule implements Schedule {
         }
     }
 
-    private Event parseEvent(String[] splitString) {
-        final String eventName = splitString[5];
-        final int duration = Integer.parseInt(splitString[6]);
+    /**
+     * Parses an event from the input string.
+     * @param splitString to be parsed string
+     * @return Event
+     */
+    private Event parseEvent(String... splitString) {
+
+        final String eventName = splitString[NAMEINT];
+        final int duration = Integer.parseInt(splitString[DURATIONINT]);
         return new Event(eventName, duration);
     }
 
-    private LocalDateTime parseLocalDateTime(String[] splitString) {
+    /**
+     * Parses a LocalDateTime from the input string.
+     * @param splitString to be parsed string
+     * @return LocalDateTime
+     */
+    private LocalDateTime parseLocalDateTime(String... splitString) {
         final int year = Integer.parseInt(splitString[0]);
         final int month = Integer.parseInt(splitString[1]);
         final int day = Integer.parseInt(splitString[2]);
-        final int hour = Integer.parseInt(splitString[3]);
-        final int minute = Integer.parseInt(splitString[4]);
+        final int hour = Integer.parseInt(splitString[HOURINT]);
+        final int minute = Integer.parseInt(splitString[MINUTEINT]);
         return LocalDateTime.of(year, month, day, hour, minute);
     }
 
 
     @Override
     public Schedule expire() {
-        LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime now = LocalDateTime.now();
 
 
-        Iterator<Map.Entry<Event, Set<LocalDateTime>>> entryIterator =  this.eventMap.entrySet().iterator();
-        while (entryIterator.hasNext()){
+        final Iterator<Map.Entry<Event, Set<LocalDateTime>>> entryIterator = this.eventMap.entrySet().iterator();
+        while (entryIterator.hasNext()) {
 
-            Map.Entry<Event,Set<LocalDateTime>> entry = entryIterator.next();
-            Iterator<LocalDateTime> timeIterator = entry.getValue().iterator();
+            final Map.Entry<Event, Set<LocalDateTime>> entry = entryIterator.next();
+            final Iterator<LocalDateTime> timeIterator = entry.getValue().iterator();
 
-            while (timeIterator.hasNext()){
+            while (timeIterator.hasNext()) {
 
-                LocalDateTime dateTime = timeIterator.next();
-                if (dateTime.isBefore(now)){
+                final LocalDateTime dateTime = timeIterator.next();
+                if (dateTime.isBefore(now)) {
                     timeIterator.remove();
                 }
             }
 
-            if (entry.getValue().size()==0){
+            if (entry.getValue().size() == 0) {
                 entryIterator.remove();
             }
         }
@@ -82,21 +137,26 @@ public class MapSchedule implements Schedule {
     public Schedule repeatWeekly(Event event, int times) {
         LocalDateTime lasttime = this.getLastTime(event);
 
-        for (int i = 1; i<=times; i++){
-            lasttime= lasttime.plusWeeks(1);
+        for (int iterationInt = 1; iterationInt <= times; iterationInt++) {
+            lasttime = lasttime.plusWeeks(1);
             addEvent(event, lasttime);
         }
         return this;
     }
 
+    /**
+     * Finds the last time an Event is scheduled.
+     * @param event to be sought Event
+     * @return last time
+     */
     private LocalDateTime getLastTime(Event event) {
-        if(this.eventMap.containsKey(event)){
-            Iterator<LocalDateTime> timeIterator = eventMap.get(event).iterator();
+        if (this.eventMap.containsKey(event)) {
+            final Iterator<LocalDateTime> timeIterator = eventMap.get(event).iterator();
             LocalDateTime lastTime = timeIterator.next();
-            while (timeIterator.hasNext()){
-                LocalDateTime next = timeIterator.next();
+            while (timeIterator.hasNext()) {
+                final LocalDateTime next = timeIterator.next();
                 if (next.isAfter(lastTime))
-                    lastTime=next;
+                    lastTime = next;
             }
             return lastTime;
         } else {
@@ -107,10 +167,10 @@ public class MapSchedule implements Schedule {
 
     @Override
     public Optional<Event> find(String key) {
-        Iterator<Event> eventIterator = this.eventMap.keySet().iterator();
-        while (eventIterator.hasNext()){
-            Event event = eventIterator.next();
-            if (event.getTitle().trim().toLowerCase().contains(key.toLowerCase().trim())){
+        final Iterator<Event> eventIterator = this.eventMap.keySet().iterator();
+        while (eventIterator.hasNext()) {
+            final Event event = eventIterator.next();
+            if (event.getTitle().trim().toLowerCase().contains(key.toLowerCase().trim())) {
                 return Optional.of(event);
             }
         }
@@ -119,8 +179,8 @@ public class MapSchedule implements Schedule {
 
     @Override
     public String toString() {
-        return "MapSchedule{" +
-                "eventMap=" + eventMap +
-                '}';
+        return "MapSchedule{"
+                +"eventMap=" + eventMap
+                +'}';
     }
 }

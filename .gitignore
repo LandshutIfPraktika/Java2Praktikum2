@@ -1,4 +1,7 @@
+*.jar
 *.class
 *.zip
 *.pdf
+pmd*
+checkstyle*
 praktikum

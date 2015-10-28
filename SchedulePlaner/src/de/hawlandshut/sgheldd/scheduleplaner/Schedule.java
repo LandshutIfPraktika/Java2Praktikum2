@@ -39,8 +39,9 @@ public interface Schedule {
      * @param args einige Ereignisse
      *             2015/11/3/12/50/Robotikvorlesung/90
      *             2015/7/31/12/00/Pruefung/60
+     * @throws IllegalArgumentException
      */
-    static void main(String... args) throws Exception{
+    static void main(String... args) throws IllegalArgumentException{
         final Schedule schedule = new MapSchedule(args);
 
         System.out.println(schedule);
